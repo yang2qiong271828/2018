@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+    http://www.springframework.org/schema/security 
+    http://www.springframework.org/schema/security/spring-security-3.0.xsd">
+
+	<!-- 配置登陆页面的切入点 -->
+	<!-- entry-point-ref：安全退出后,再次请求受限资源时所跳转的URL -->
+	<security:http use-expressions="true" entry-point-ref="authenticationEntryPoint"
+		access-denied-page="/noAuth.jsp">
+		<security:logout invalidate-session="true" logout-url="/logout"
+			success-handler-ref="logoutFilter" />
+		<security:intercept-url pattern="/system/backend_login!main.action"
+			filters="none" />
+		<security:intercept-url pattern="/workorder/work_order!evaluation.action"
+			filters="none" />
+		<security:intercept-url pattern="/workorder/work_order!saveEvaluation.action"
+            filters="none" />
+		<security:intercept-url pattern="/dictionary/backend_dictionary!view.action"
+            filters="none" />
+        <security:intercept-url pattern="/monit/monitoring!constant.action"
+            filters="none" />
+        <security:intercept-url pattern="/monit/monitoring!constantdata.action"
+            filters="none" />
+        <security:intercept-url pattern="/monit/monitoring!findLastData.action"
+            filters="none" />
+		<security:intercept-url pattern="/jsp/system/loginLayout.jsp"
+			filters="none" />
+	    <security:intercept-url pattern="/jsp/system/login.jsp"
+			filters="none" />
+		<security:intercept-url pattern="/template/**"
+			filters="none" />
+		<security:intercept-url pattern="/index.jsp"
+			filters="none" />
+		<security:intercept-url pattern="/noAuth.jsp"
+			filters="none" />
+		<security:intercept-url pattern="/error.jsp"
+			filters="none" />
+		<security:intercept-url pattern="/sessionTimeOut.jsp"
+			filters="none" />
+		<!-- <security:intercept-url pattern="/system/backend_page!mainshow.action"
+			filters="none" /> -->
+		<security:intercept-url pattern="/jsp/icon/icon_home.jsp"
+			filters="none" />
+		<security:intercept-url pattern="/system/backend_page!main.action"
+			filters="none" />
+		<security:intercept-url pattern="/jsp/system/backend_page_main.jsp"
+			filters="none" />	
+		<security:intercept-url pattern="/jsp/system/gdlist.txt"
+			filters="none" />	
+		<security:intercept-url pattern="/equipment/equipment_use!show.action"
+			filters="none" />	
+		<security:intercept-url pattern="/system/backend_menu!WcList.action"
+			filters="none" />
+		<security:intercept-url pattern="/equipment/equipment_use!getSblist.action"
+			filters="none" />
+		<security:intercept-url pattern="/equipment/equipment_use!sbxq.action"
+			filters="none" />	
+		<security:intercept-url pattern="/equipment/equipment_use!getRmlist.action"
+			filters="none" />	
+		<security:intercept-url pattern="/equipment/equipment_use!getTp.action"
+			filters="none" />		
+		<security:intercept-url pattern="/equipment/equipment_use!getGylx.action"
+			filters="none" />
+		<security:intercept-url pattern="/equipment/equipment_use!getSbcj.action"
+			filters="none" />
+		<security:intercept-url pattern="/equipment/equipment_use!tzrm.action"
+			filters="none" />	
+		<!-- 以上未列出的，也都必须验证才能访问 -->
+        <security:intercept-url pattern="/**" access="isAuthenticated()" />
+        <!-- 所有地址全关闭，禁止登陆，测试用 -->
+        <!--security:intercept-url pattern="/**" access="denyAll()" /-->
+        <!-- 如果用户不是通过匿名也不是通过remember-me登录的用户时， 就会返回true -->
+        <!--security:intercept-url pattern="/**" access="isFullyAuthenticated()" /-->
+        <!-- 所有地址全开，无需验证，测试用 -->
+         <!--security:intercept-url pattern="/**" access="permitAll" /--> 
+		<!-- 配置session超时后跳转的页面，以及一个用户只能登陆一次 -->
+		<security:session-management
+			invalid-session-url="/sessionTimeOut.jsp">
+			<security:concurrency-control  error-if-maximum-exceeded="true"
+				max-sessions="1" />
+		</security:session-management>
+		<!-- 配置Cookies自动登录 -->
+		<security:remember-me services-ref="rememberMeServices"
+			key="JMonkey" />
+		<!-- 替换默认的登陆验证Filter -->
+		<security:custom-filter ref="loginFilter"
+			position="FORM_LOGIN_FILTER" />
+		<security:custom-filter ref="FilterSecurityInterceptor"
+			before="FILTER_SECURITY_INTERCEPTOR" />
+	</security:http>
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 配置登陆页面 -->
+	<bean id="authenticationEntryPoint"
+		class="com.lingnet.qxgl.security.login.MultipleAuthenticationEntryPoint">
+		<property name="directUrlResolvers">
+			<list>
+				<ref bean="backLoginEntry" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置后台登陆 -->
+	<bean id="backLoginEntry" class="com.lingnet.qxgl.security.shared.DirectUrlResolverImpl">
+		<property name="pattern" value="/system"></property>
+		<property name="directUrl" value="/system/backend_login!main.action"></property>
+	</bean>
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 配置登出页面 -->
+	<bean id="logoutFilter" class="com.lingnet.qxgl.security.logout.MultipleLogoutSuccessHandler">
+		<property name="directUrlResolvers">
+			<list>
+				<ref bean="backendLogoutSuccessUrlResolver" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 配置后台登出 -->
+	<bean id="backendLogoutSuccessUrlResolver" class="com.lingnet.qxgl.security.shared.ParameterDirectUrlResolverImpl">
+		<property name="parameterName" value="token"></property>
+		<property name="pattern" value="backend"></property>
+		<property name="directUrl" value="/system/backend_login!main.action" />
+	</bean>
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 自定义登陆验证过滤器 -->
+	<bean id="loginFilter"
+		class="com.lingnet.qxgl.security.authentication.filter.MultipleUsernamePasswordAuthenticationFilter">
+		<!-- 登陆页面URL -->
+		<property name="filterProcessesUrl" value="/login_check" />
+		<!-- 注入不同类型的用户凭证 -->
+		<property name="tokenResolvers">
+			<list>
+				<ref bean="backendAuthenticationTokenResolver" />
+			</list>
+		</property>
+		<!-- 自动登录 -->
+		<property name="rememberMeServices" ref="rememberMeServices"></property>
+		<!-- 校验用户名及密码，并对用户授权 -->
+		<property name="authenticationManager" ref="authenticationManager" />
+		<!-- 验证通过所执行的请求 -->
+		<property name="authenticationSuccessHandler" ref="authenticationSuccessHandler" />
+		<!-- 验证未通过所执行的请求 -->
+		<property name="authenticationFailureHandler" ref="authenticationFailureHandler" />
+		
+	</bean>
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 构建后台登陆用户凭证 -->
+	<bean id="backendAuthenticationTokenResolver"
+		class="com.lingnet.qxgl.security.authentication.filter.BackendAuthenticationTokenResolver">
+		<property name="parameterName" value="token" />
+		<property name="parameterValue" value="backend" />
+	</bean>
+
+	<!-- 登陆验证成功后的处理结果 -->
+	<bean id="authenticationSuccessHandler"
+		class="com.lingnet.qxgl.security.authentication.handler.MultipleAuthenticationSuccessHandler">
+		<property name="directUrlResolvers">
+			<list>
+				<ref bean="backendAuthenticationSuccessUrlResolver" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 登陆验证失败后的处理结果 -->
+	<bean id="authenticationFailureHandler"
+		class="com.lingnet.qxgl.security.authentication.handler.MultipleAuthenticationFailureHandler">
+		<property name="directUrlResolvers">
+			<list>
+				<ref bean="backendAuthenticationFailureUrlResolver" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 后台验证成功后的处理结果 -->
+	<bean id="backendAuthenticationSuccessUrlResolver" class="com.lingnet.qxgl.security.shared.ParameterDirectUrlResolverImpl">
+		<property name="parameterName" value="token" />
+		<property name="pattern" value="backend" />
+		<property name="directUrl" value="/system/backend_page!mainshow.action" />
+	</bean>
+
+	<!-- 后台验证失败后的处理结果 -->
+	<bean id="backendAuthenticationFailureUrlResolver" class="com.lingnet.qxgl.security.shared.ParameterDirectUrlResolverImpl">
+		<property name="parameterName" value="token" />
+		<property name="pattern" value="backend" />
+		<property name="directUrl" value="/system/backend_login!main.action" />
+	</bean>
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 配置Cookies自动登录 -->
+	<bean id="rememberMeServices"
+		class="org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices">
+		<!-- Cookies保存的属性名 -->
+		<property name="key" value="JMonkey" />
+		<!-- 页面多选框标签的属性名 -->
+		<property name="parameter" value="rememberMe" />
+		<!-- Cookies时间(秒) -->
+		<property name="tokenValiditySeconds" value="123456789"></property>
+		<property name="userDetailsService" ref="backendUserDetailsService" />
+		<!-- <property name="tokenRepository" ref="tokenRepository" /> -->
+	</bean>
+
+	<!-- ====================================================模块分割线==================================================== -->
+	<!-- 权限模块注入 -->
+   <bean id="backendRoleAction" 
+	   class="com.lingnet.qxgl.action.system.BackendRoleAction">
+	   <property name="backendSecurityMetadataSource" ref="backendSecurityMetadataSource" />
+	</bean>
+	<!-- 自定义权限认证过滤器 -->
+	<bean id="FilterSecurityInterceptor"
+		class="com.lingnet.qxgl.security.manage.filter.MultipleFilterSecurityInterceptor">
+		<property name="authenticationManager" ref="authenticationManager" />
+		<property name="securityMetadataSource" ref="multipleSecurityMetadataSource" />
+		<property name="accessDecisionManager" ref="multipleAccessDecisionManager" />
+
+	</bean>
+
+	<!-- 配置访问的资源属性 -->
+	<bean id="multipleSecurityMetadataSource"
+		class="com.lingnet.qxgl.security.manage.metadata.MultipleFilterInvocationSecurityMetadataSource">
+		<property name="metadataSources">
+			<list>
+				<ref bean="backendSecurityMetadataSource" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 后台资源 -->
+	<bean id="backendSecurityMetadataSource"
+		class="com.lingnet.qxgl.security.manage.metadata.BackendSecurityMetadataSource">
+		<property name="pattern" value="/system"></property>
+	</bean>
+
+
+	<!-- 配置访问决策器 -->
+	<bean id="multipleAccessDecisionManager"
+		class="com.lingnet.qxgl.security.manage.decide.MultipleAccessDecisionManager" >
+	</bean>
+
+
+	<!-- ====================================================模块分割线==================================================== -->
+
+	<!-- 配置身份验证管理器 -->
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider
+			ref="multipleAuthenticationProvider">
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+
+	<!-- 配置身份验证器 -->
+	<bean id="multipleAuthenticationProvider"
+		class="com.lingnet.qxgl.security.authentication.provider.MultipleAuthenticationProvider">
+		<property name="authenticationProviders">
+			<list>
+				<ref bean="backendAuthenticationProvider" />
+			</list>
+		</property>
+	</bean>
+
+	<!-- 后台身份验证 -->
+	<bean id="backendUserDetailsService"
+		class="com.lingnet.qxgl.security.authentication.details.BackendUserDetailsService">
+	</bean>
+	
+	<!-- 配置加密策略 -->
+	<bean id="shaPasswordEncoder"
+		class="org.springframework.security.authentication.encoding.ShaPasswordEncoder">
+		<!-- 加密方式 SHA-256 -->
+		<constructor-arg value="256" />
+	</bean>
+
+	<!-- 配置密码的盐值 -->
+	<bean id="saltSource"
+		class="org.springframework.security.authentication.dao.ReflectionSaltSource">
+		<!-- 以用户名作为加密盐值 -->
+		<property name="userPropertyToUse" value="username"></property>
+	</bean>
+
+	<!-- 后台验证器并构建新用户凭证 -->
+	<bean id="backendAuthenticationProvider"
+		class="com.lingnet.qxgl.security.authentication.provider.BackendAuthenticationProvider">
+		<property name="userDetailsService" ref="backendUserDetailsService"></property>
+		<property name="passwordEncoder" ref="shaPasswordEncoder"></property>
+		<property name="saltSource" ref="saltSource"></property>
+	</bean>
+</beans>

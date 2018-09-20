@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xsi:schemaLocation="       
+      http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd       
+      http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd       
+      http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-3.0.xsd       
+      http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-3.0.xsd       
+      http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+
+	<!-- 注解配置 -->
+	<context:component-scan base-package="com.lingnet"></context:component-scan>
+	<!-- 加载JDBC的配置信息 -->
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<value>classpath*:initjdbc.properties</value>
+		</property>
+	</bean>
+	
+	
+	
+	<!-- 连接池的定义，这里使用C3P0连接池 -->
+	<bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		scope="singleton" destroy-method="close">
+		<property name="driverClass" value="${jdbc.driverClassName}" /> 
+		<property name="jdbcUrl" value="${jdbc.url}" />
+		<property name="user" value="${jdbc.username}" />
+		<property name="password" value="${jdbc.password}" />
+		<!-- 获得连接的超时时间,如果超过这个时间,会抛出异常，如设为0则无限期等待,单位毫秒 -->
+		<property name="checkoutTimeout" value="${cpool.checkoutTimeout}" />
+		<!-- 指定连接数据库连接池的初始化连接数 -->
+		<property name="initialPoolSize" value="${cpool.minPoolSize}" />
+		<!-- 指定连接数据库连接池的最小连接数 -->
+		<property name="minPoolSize" value="${cpool.minPoolSize}" />
+		<!-- 指定连接数据库连接池的最大连接数 -->
+		<property name="maxPoolSize" value="${cpool.maxPoolSize}" />
+		<!-- 指定连接数据库连接池的连接的最大空闲时间 -->
+		<property name="maxIdleTime" value="${cpool.maxIdleTime}" />
+		<!-- 当连接池里面的连接用完时，C3P0一下获取的新连接数 -->
+		<property name="acquireIncrement" value="${cpool.acquireIncrement}" />
+		<!-- 指定时间后闲置的多余连接进行淘汰 -->
+		<property name="maxIdleTimeExcessConnections" value="${cpool.maxIdleTimeExcessConnections}" />
+	</bean>
+	
+	
+	
+	<bean id="backendResourceService" class="com.lingnet.qxgl.service.impl.BackendResourceServiceImpl" >
+		<property name="jdbcUrl" value="${jdbc.url}"/> 
+	</bean>
+	
+	<bean id="adminService" class="com.lingnet.qxgl.service.impl.AdminServiceImpl" >
+		<property name="jdbcUrl" value="${jdbc.url}"/> 
+	</bean>
+	
+	<!-- Hibernate SessionFactory的配置 -->
+	<bean id="sessionFactory"
+		class="org.springframework.orm.hibernate3.annotation.AnnotationSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<!-- 配置Hibernaye拦截器，自动填充时间日期 -->
+		<property name="entityInterceptor" ref="entityInterceptor" />
+		<property name="hibernateProperties">
+			<props>
+				<!-- MySql时数据库方言使用MySQLInnoDBDialect -->
+				<!--<prop key="hibernate.dialect">org.hibernate.dialect.MySQLInnoDBDialect</prop>-->
+				<!-- ORACLE时数据库方言使用Oracle10gDialect -->
+				<!--<prop key="hibernate.dialect">org.hibernate.dialect.Oracle10gDialect</prop> -->
+				<!-- SQLSERVER时数据库方言使用SQLServerDialect
+				<prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop> -->
+				<prop key="hibernate.dialect">com.lingnet.util.MySQLServer2005Dialect</prop>
+				<!-- 每次从数据库中取出的记录条数 -->
+				<prop key="hibernate.jdbc.fetch_size">40</prop>
+				<!-- 每次从数据库中批量操作的记录条数 -->
+				<prop key="hibernate.jdbc.batch_size">20</prop>
+				<!-- 打印SQL语句 -->
+				<prop key="hibernate.show_sql">true</prop>
+				<!-- 格式化SQL语句 -->
+				<prop key="hibernate.format_sql">false</prop>
+				<!-- 自动建表 -->
+				<!-- <prop key="hibernate.hbm2ddl.auto">update</prop> 
+				<prop key="hibernate.connection.release_mode">after_transaction</prop>
+				<prop key="current_session_context_class">thread</prop>-->
+			</props>
+		</property>
+		<property name="namingStrategy" ref="databaseNamingStrategy"></property>
+		<property name="packagesToScan" value="com.lingnet.*.entity"></property>
+		</bean>
+		
+		
+	<!-- 动态表名映射 -->
+	<bean id="databaseNamingStrategy" class="com.lingnet.common.DatabaseNamingStrategy">
+		<property name="tablePrefix" value="${namingStrategy.tablePrefix}" />
+		<property name="isAddUnderscores" value="${namingStrategy.isAddUnderscores}" />
+		<property name="maxLength" value="${namingStrategy.maxLength}" />
+	</bean>
+
+	<!-- 配置JdbcTemplate类 -->
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- 配置事物管理 -->
+	<bean id="transactionManager"
+		class="org.springframework.orm.hibernate3.HibernateTransactionManager">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean>
+	
+	<!-- <bean id="hibernateUtil"
+		class="com.lingnet.util.HibernateUtil">
+		<property name="sessionFactory" ref="sessionFactory" />
+	</bean> -->
+
+	<!-- 事务管理交由Spring管理 -->
+	<tx:annotation-driven transaction-manager="transactionManager" />
+	<!-- Spring工具类 -->
+	<bean id="springUtil" class="com.lingnet.util.SpringUtil" />
+
+	<!-- JSON处理类 -->
+	<bean id="jacksonObjectMapper" class="org.codehaus.jackson.map.ObjectMapper" />
+
+	<!-- 验证图片 -->
+	<bean id="captchaService"
+		class="com.octo.captcha.service.image.DefaultManageableImageCaptchaService">
+		<property name="captchaEngine">
+			<bean class="com.lingnet.util.CaptchaEngine" />
+		</property>
+		<property name="minGuarantedStorageDelayInSeconds" value="600" />
+	</bean>
+	
+	<!--<tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="*" propagation="REQUIRED" />
+        </tx:attributes>
+    </tx:advice>
+    
+    <aop:config>
+        <aop:pointcut id="interceptorPointCuts"
+            expression="execution(* com.lingnet*.dao.*.*(..))" />
+        <aop:advisor advice-ref="txAdvice"
+            pointcut-ref="interceptorPointCuts" />        
+    </aop:config>  -->
+	
+	<!-- <bean id="myJob" class="org.springframework.scheduling.quartz.JobDetailBean">
+        <property name="jobClass" value="com.lingnet.vocs.task.MyJbo"/>
+    </bean>  
+
+	<bean id="myJobTimeTrigger" class="org.springframework.scheduling.quartz.CronTriggerBean">
+      <property name="jobDetail">    
+          <ref bean="myJob"/>    
+      </property>    
+      <property name="cronExpression">    
+      这里是重点，可以自定义表达式实现定时触发。
+        1．秒（0–59）
+		2．分钟（0–59）
+		3．小时（0–23）
+		4．月份中的日期（1–31）
+		5．月份（1–12或JAN–DEC）
+		6．星期中的日期（1–7或SUN–SAT）
+		7．年份（1970–2099）
+	“月份中的日期”和“星期中的日期”这两个元素是互斥的，
+	因此应该通过设置一个问号（？）来表明你不想设置的那个字段   
+           <value>5/10 * * * * ? *</value>
+      </property>    
+  </bean>
+  
+  <bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">    
+      <property name="triggers">    
+          <list>    
+              <ref bean="myJobTimeTrigger"/>
+              ....下面可以继续添加其他触发器
+          </list>    
+      </property>    
+  </bean> -->
+
+</beans>

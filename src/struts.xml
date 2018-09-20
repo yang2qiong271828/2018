@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 2.1//EN" "http://struts.apache.org/dtds/struts-2.1.dtd">
+<struts>
+	<!--开发模式下使用，这样可以打印出更详细的错误信息 -->
+	<constant name="struts.devMode" value="false" />
+	<!-- 国际化资源文件名称 -->  
+	<constant name="struts.custom.i18n.resources" value="i18n" />
+	<!--每次Http请求到达时,是否重新加载资源文件 -->
+	<!-- 是否自动加载国际化资源文件  -->  
+	<constant name="struts.i18n.reload" value="false" />
+	<!-- convention类重新加载 -->  
+	<constant name="struts.convention.classes.reload" value="false" />
+	<constant name="struts.convention.action.packages" value="com.lingnet.*.action" />
+	<!-- 浏览器是否缓存静态内容 --> 
+	<constant name="struts.serve.static.browserCache" value="true" />
+	<!--与spring集成时，指定由spring负责action对象的创建 -->
+	<constant name="struts.objectFactory" value="spring" />
+	<!--默认的视图主题 -->
+	<constant name="struts.ui.theme" value="simple" />
+	<constant name="struts.i18n.encoding" value="UTF-8" />
+	<constant name="struts.action.extension" value="action" />
+	<!-- 返回的视图资源路径 -->
+	<constant name="struts.convention.result.path" value="/jsp/" />
+	<!-- 试图资源分隔符 -->
+	<constant name="struts.convention.action.name.separator"
+		value="_" />
+		<!-- 指定允许上传的文件最大字节数。默认值是2097152(100M) -->
+    <constant name="struts.multipart.maxSize" value="1572864000"/>
+	<package name="basePackage" extends="struts-default">
+		<interceptors>
+			<interceptor name="loginFailureInterceptor"
+				class="com.lingnet.qxgl.interceptor.LoginFailureInterceptor">
+			</interceptor>
+			<interceptor-stack name="baseStack">
+				<interceptor-ref name="exception" />
+				<interceptor-ref name="alias" />
+				<interceptor-ref name="servletConfig" />
+				<interceptor-ref name="i18n" />
+				<interceptor-ref name="prepare" />
+				<interceptor-ref name="chain" />
+				<interceptor-ref name="debugging" />
+				<interceptor-ref name="scopedModelDriven" />
+				<interceptor-ref name="modelDriven" />
+				<interceptor-ref name="checkbox" />
+				<interceptor-ref name="multiselect" />
+				<interceptor-ref name="staticParams" />
+				<interceptor-ref name="conversionError" />
+				<interceptor-ref name="actionMappingParams" />
+				<!-- 拦截进入管理页面请求动作 -->
+				<interceptor-ref name="loginFailureInterceptor">
+					<param name="includeMethods">main</param>
+				</interceptor-ref>
+				<interceptor-ref name="params">
+					<param name="excludeParams">dojo\..*,^struts\..*,.*\\u0023.*,.*\\x5Cu0023.*,.*\\x5cu0023.*</param>
+				</interceptor-ref>
+				<interceptor-ref name="validation">
+					<param name="excludeMethods">input,back,cancel,browse</param>
+					<param name="validateAnnotatedMethodOnly">true</param>
+				</interceptor-ref>
+				<interceptor-ref name="workflow">
+					<param name="excludeMethods">input,back,cancel,browse</param>
+				</interceptor-ref>
+				<interceptor-ref name="defaultStack"/> 
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="baseStack" />
+	</package>
+
+	<package name="system" extends="basePackage" namespace="/system">
+		<!-- 拦截器 -->
+		
+		<interceptors>
+			<interceptor name="loginFailureInterceptor"
+				class="com.lingnet.qxgl.interceptor.LoginFailureInterceptor">
+			</interceptor>
+			<interceptor-stack name="baseStack">
+				<interceptor-ref name="exception" />
+				<interceptor-ref name="alias" />
+				<interceptor-ref name="servletConfig" />
+				<interceptor-ref name="i18n" />
+				<interceptor-ref name="prepare" />
+				<interceptor-ref name="chain" />
+				<interceptor-ref name="debugging" />
+				<interceptor-ref name="scopedModelDriven" />
+				<interceptor-ref name="modelDriven" />
+				<interceptor-ref name="checkbox" />
+				<interceptor-ref name="multiselect" />
+				<interceptor-ref name="staticParams" />
+				<interceptor-ref name="conversionError" />
+				<interceptor-ref name="actionMappingParams" />
+				<!-- 拦截进入管理页面请求动作 -->
+				<interceptor-ref name="loginFailureInterceptor">
+					<param name="includeMethods">main</param>
+				</interceptor-ref>
+				<interceptor-ref name="params">
+					<param name="excludeParams">dojo\..*,^struts\..*,.*\\u0023.*,.*\\x5Cu0023.*,.*\\x5cu0023.*</param>
+				</interceptor-ref>
+				<interceptor-ref name="validation">
+					<param name="excludeMethods">input,back,cancel,browse</param>
+					<param name="validateAnnotatedMethodOnly">true</param>
+				</interceptor-ref>
+				<interceptor-ref name="workflow">
+					<param name="excludeMethods">input,back,cancel,browse</param>
+				</interceptor-ref>
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="baseStack" />
+	</package>
+	<!-- 部门跳转拦截 -->
+	<package name="depart"  extends="basePackage" namespace="/depart">
+		<interceptors>
+			<interceptor-stack name="adminStack">
+				<interceptor-ref name="baseStack" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 字典操作拦截 -->
+	<package name="dictionary" extends="basePackage" namespace="/dictionary">
+		<!-- 拦截器 -->
+		
+		<interceptors>
+			<interceptor-stack name="adminStack">
+				<interceptor-ref name="baseStack" />
+			</interceptor-stack>
+		</interceptors>
+		<default-interceptor-ref name="adminStack" />
+	</package>
+    
+    <!--首页内容拦截 -->
+      <package name="icon"  extends="basePackage" namespace="/icon">
+        <interceptors>
+            <interceptor-stack name="adminStack">
+                <interceptor-ref name="baseStack" />
+            </interceptor-stack>
+        </interceptors>
+        <default-interceptor-ref name="adminStack" />
+    </package>
+      
+    <!--  合作商   -->
+	<package name="partner" extends="basePackage" namespace="/partner">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+    <!-- 设备 -->
+	<package name="equipment" extends="basePackage" namespace="/equipment">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+    <!--数据监测与报警-->
+	<package name="monit" extends="basePackage" namespace="/monit">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	
+	
+	  
+    <package name="vocsmanage"  extends="basePackage" namespace="/vocsmanage">
+        <interceptors>
+            <interceptor-stack name="adminStack">
+                <interceptor-ref name="baseStack" />
+            </interceptor-stack>
+        </interceptors>
+        <default-interceptor-ref name="adminStack" />
+    </package>
+    <!-- 远程调试 -->
+	<package name="remotedebug" extends="basePackage" namespace="/remotedebug">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>	 
+	<!-- 客户 -->
+	<package name="customer" extends="basePackage" namespace="customer">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 检测标准 -->
+	<package name="standard" extends="basePackage" namespace="/standard">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+    <!-- 基础数据 -->
+	<package name="jcsj" extends="basePackage" namespace="/jcsj">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 账务管理 -->
+	<package name="finance" extends="basePackage" namespace="/finance">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 物料管理 -->
+	<package name="bominfo" extends="basePackage" namespace="/bominfo">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 物料管理 -->
+	<package name="baseinfo" extends="basePackage" namespace="/baseinfo">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 排污企业排污情况汇总-->
+	<package name="sewage" extends="basePackage" namespace="/sewage">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 经销商报备 -->
+	<package name="reported" extends="basePackage" namespace="/reported">
+	    <interceptors>
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 供应商-->
+	<package name="supplier" extends="basePackage" namespace="/supplier">
+	    <interceptors>
+	     	 <!-- 定义拦截器栈 -->
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 供应商案例-->
+	<package name="scase" extends="basePackage" namespace="/scase">
+	    <interceptors>
+	     	 <!-- 定义拦截器栈 -->
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	<!-- 售后定期服务项-->
+	<package name="maintenance" extends="basePackage" namespace="/maintenance">
+	    <interceptors>
+	     	 <!-- 定义拦截器栈 -->
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+	
+	
+		<!-- 区域检测-->
+	
+	<package name="region" extends="basePackage" namespace="/region">
+	    <interceptors>
+	     	 <!-- 定义拦截器栈 -->
+	        <interceptor-stack name="adminStack">
+	            <interceptor-ref name="baseStack" />
+	        </interceptor-stack>
+	    </interceptors>
+	    <default-interceptor-ref name="adminStack" />
+	</package>
+</struts>
